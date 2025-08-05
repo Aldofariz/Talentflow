@@ -1,10 +1,13 @@
-import React from 'react'
+import React, { useContext } from 'react'
+import { useModalContext } from '../context/Modalcontext'
 
-const Navbar = ({onOpen}) => {
+const Navbar = ({}) => {
+    const { handleOpen } = useModalContext()
+    
   return (
     <div className="navbar bg-base-100 shadow-sm">
         <div className="navbar-start">
-            <a className="btn btn-ghost text-xl">Clients</a>
+            <a className="btn btn-ghost text-xl" href='/' >Clients</a>
         </div>
     <div className="navbar-center">
         <div className='form-control'>
@@ -12,7 +15,7 @@ const Navbar = ({onOpen}) => {
         </div>
     </div>
         <div className="navbar-end">
-            <a className="btn" onClick={onOpen}>Add Client</a>
+            <a className="btn" onClick={() => handleOpen('add')}>Add Client</a>
         </div>
     </div>
 )
