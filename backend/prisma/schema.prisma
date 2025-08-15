@@ -19,7 +19,7 @@ model client_tb {
   email String @unique 
   job String
   rate Decimal @db.Decimal(10, 2)
-  isActive Boolean @default(true)
+  isActive Boolean
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

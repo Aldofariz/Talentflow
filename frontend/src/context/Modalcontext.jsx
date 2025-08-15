@@ -1,50 +1,123 @@
-import { createContext, useContext, useState } from 'react';
+/* eslint-disable react-refresh/only-export-components */
+/* eslint-disable react-hooks/exhaustive-deps */
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { api } from "../lib/axios";
 
-// 1. Buat Context
-const ModalContext = createContext();
+const ModalContext = createContext(null);
 
-// 2. Buat Custom Hook untuk menggunakan Context
-export const useModalContext = () => {
-    return useContext(ModalContext);
-    };
+export const useClient = () => useContext(ModalContext);
 
-    // 3. Buat Provider untuk membungkus komponen yang membutuhkan state
-export const ModalProvider = ({ children }) => {
-    // Pindahkan semua state dan fungsi handler ke sini
-    const [isOpen, setIsOpen] = useState(false);
-    const [modalMode, setModalMode] = useState('add');
+export const ClientProvider = ({ children }) => {
+  const [clients, setClients] = useState([]);
+  const [selectedClient, setSelectedClient] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState("add");
+  const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(false);
 
-    const handleOpen = (mode) => {
-        setIsOpen(true);
-        setModalMode(mode);
-    };
+  const abortRef = useRef(null);
 
-    const handleClose = () => {
-        setIsOpen(false);
-    };
+  const fetchClients = async (q = "") => {
+    try {
+      setLoading(true);
 
-    const handleSubmit = () => {
-        if (modalMode === 'add') {
-        console.log('modal mode Add');
-        // Tambahkan logika untuk CREATE
-        } else {
-        console.log('modal mode Edit');
-        // Tambahkan logika untuk UPDATE
-        }
-        setIsOpen(false); // Tutup modal setelah submit
-    };
+      if (abortRef.current) abortRef.current.abort();
+      abortRef.current = new AbortController();
 
-    const value = {
-        isOpen,
-        modalMode,
-        handleOpen,
-        handleClose,
-        handleSubmit,
-    };
+      const res = await api.get("/api/clients", {
+        params: q ? { search: q } : {},
+        signal: abortRef.current.signal,
+      });
+      setClients(res.data?.data ?? res.data ?? []);
+    } catch (err) {
+      if (err.name !== "CanceledError" && err.code !== "ERR_CANCELED") {
+        console.error(
+          "fetchClients error:",
+          err?.response?.data || err.message
+        );
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    return (
-        <ModalContext.Provider value={value}>
-        {children}
-        </ModalContext.Provider>
-    );
-    };
+  // Create Client
+  const addClient = async (payload) => {
+    await api.post("/api/clients", payload);
+    await fetchClients(search);
+    closeModal();
+  };
+
+  // Update Client
+  const updateClient = async (id, payloadPartial) => {
+    await api.put(`/api/clients/${id}`, payloadPartial);
+    await fetchClients(search);
+    closeModal();
+  };
+
+  // Delete Client
+  const deleteClient = async (id) => {
+    await api.delete(`/api/clients/${id}`);
+    await fetchClients(search);
+  };
+
+  // Open modal for editing
+  const openEditModal = (client) => {
+    setSelectedClient(client);
+    setModalMode("edit");
+    setIsModalOpen(true);
+  };
+
+  // Open modal for adding a new client
+  const openAddModal = () => {
+    setSelectedClient(null);
+    setModalMode("add");
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => setIsModalOpen(false);
+
+  useEffect(() => {
+    fetchClients();
+  }, []);
+
+  useEffect(() => {
+    const t = setTimeout(() => fetchClients(search), 300);
+    return () => clearTimeout(t);
+  }, [search]);
+
+  const value = useMemo(
+    () => ({
+      // data
+      clients,
+      loading,
+      // modal
+      selectedClient,
+      isModalOpen,
+      modalMode,
+      openAddModal,
+      openEditModal,
+      closeModal,
+      // crud
+      fetchClients,
+      addClient,
+      updateClient,
+      deleteClient,
+      // search
+      search,
+      setSearch,
+    }),
+    [clients, loading, selectedClient, isModalOpen, modalMode, search]
+  );
+
+  return (
+    <ModalContext.Provider value={value}>{children}</ModalContext.Provider>
+  );
+};

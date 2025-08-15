@@ -1,73 +1,89 @@
-import React from 'react'
+import { useClient } from "../context/ModalContext";
 
-const TableList = ({handleOpen}) => {
+const TableList = () => {
+  const {
+    clients,
+    openAddModal,
+    openEditModal,
+    deleteClient,
+    search,
+    setSearch,
+  } = useClient();
 
-    const clients = [
-        { 
-            id: 1,
-            name: 'joe', 
-            email: 'joedarmakus@gmail.com', 
-            job: 'developer', 
-            rate: 100, 
-            isactive: true 
-        },
-        { 
-            id: 2,
-            name: 'joe biden', 
-            email: 'joedarmarollerkus@gmail.com', 
-            job: 'president', 
-            rate: 100, 
-            isactive: true 
-        },
-        { 
-            id: 3,
-            name: 'joe taslim', 
-            email: 'joetaslim@gmail.com', 
-            job: 'actor', 
-            rate: 100, 
-            isactive: false 
-        },
-    ]
-    return (
-    <div>
-        <div className="overflow-x-auto mt-10">
-            <table className="table">
-                {/* head */}
-                <thead>
-                <tr>
-                    <th></th>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Job</th>
-                    <th>Rate</th>
-                    <th>Status</th>
-                </tr>
-                </thead>
-                <tbody className="hover:bg-base-300">
-                {/* row 1 */}
-                {clients.map((client) => (
-                    <tr>
-                    <th>{client.id}</th>
-                    <td>{client.name}</td>
-                    <td>{client.email}</td>
-                    <td>{client.job}</td>
-                    <td>{client.rate}</td>
-                    <td>
-                        <button className={`btn btn-xs ${client.isactive ? 'btn-primary' : 'btn-outline-primary'}`}>
-                            {client.isactive ? 'Active' : 'Inactive'}
-                        </button>
-                    </td>
-                    <td>
-                        <button onClick={() => handleOpen('edit')} className="btn btn-sm btn-secondary">Update</button>
-                        <button className="btn btn-sm btn-error ml-2">Delete</button>
-                    </td>
-                </tr>
-                ))}
-                </tbody>
-            </table>
+  return (
+    <div className="min-h-screen bg-gray-900 text-white p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-semibold">Clients</h1>
+        <div className="flex space-x-4">
+          <input
+            type="text"
+            placeholder="Search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="bg-gray-800 border border-gray-600 px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <button
+            className="bg-cyan-400 hover:bg-cyan-500 text-black font-semibold px-4 py-2 rounded-md"
+            onClick={openAddModal}
+          >
+            Add Client
+          </button>
         </div>
-    </div>
-)
-}
+      </div>
 
-export default TableList
+      <div className="overflow-x-auto">
+        <table className="w-full table-auto text-left rounded-lg overflow-hidden">
+          <thead className="bg-gray-800 text-gray-300">
+            <tr>
+              <th className="px-4 py-3">ID</th>
+              <th className="px-4 py-3">Name</th>
+              <th className="px-4 py-3">Email</th>
+              <th className="px-4 py-3">Job</th>
+              <th className="px-4 py-3">Rate</th>
+              <th className="px-4 py-3">Status</th>
+              <th className="px-4 py-3">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {clients.map((client, index) => (
+              <tr key={client.id} className="border-b border-gray-700">
+                <td className="px-4 py-3">{index + 1}</td>
+                <td className="px-4 py-3">{client.name}</td>
+                <td className="px-4 py-3">{client.email}</td>
+                <td className="px-4 py-3">{client.job}</td>
+                <td className="px-4 py-3">{client.rate}</td>
+                <td className="px-4 py-3">
+                  {client.isActive ? (
+                    <span className="bg-cyan-400 text-black px-4 py-1 rounded-full text-sm font-semibold">
+                      Active
+                    </span>
+                  ) : (
+                    <span className="border border-cyan-400 text-cyan-400 px-4 py-1 rounded-full text-sm font-semibold">
+                      Inactive
+                    </span>
+                  )}
+                </td>
+                <td className="px-4 py-3 space-x-2">
+                  <button
+                    onClick={() => openEditModal(client)}
+                    className="bg-indigo-400 hover:bg-indigo-500 text-black font-semibold px-3 py-1 rounded-md"
+                  >
+                    Update
+                  </button>
+                  <button
+                    onClick={() => deleteClient(client.id)}
+                    className="bg-red-400 hover:bg-red-500 text-black font-semibold px-3 py-1 rounded-md"
+                  >
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
+
+export default TableList;
